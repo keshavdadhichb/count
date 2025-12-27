@@ -10,7 +10,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Factory Count",
   description: "Digitize factory shipment tracking - Date, Vehicle, Package IDs",
-  manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
