@@ -7,6 +7,7 @@ import PackageInput from "@/components/PackageInput";
 import PackageList from "@/components/PackageList";
 import StatsCounter from "@/components/StatsCounter";
 import DuplicateToast from "@/components/DuplicateToast";
+import VoiceInput from "@/components/VoiceInput";
 
 interface Package {
     id: string;
@@ -260,6 +261,14 @@ export default function VehiclePage() {
                         Scan Package
                     </h3>
                     <PackageInput onSubmit={handleSubmitPackage} />
+
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                        <VoiceInput
+                            onNumberDetected={async (num) => {
+                                await handleSubmitPackage(num);
+                            }}
+                        />
+                    </div>
                 </div>
 
                 {/* Package List */}
