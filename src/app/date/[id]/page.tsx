@@ -82,6 +82,28 @@ export default function DateDetailPage() {
         }
     };
 
+    const handleDeleteVehicle = async (vehicleId: string) => {
+        try {
+            const res = await fetch(`/api/vehicles/${vehicleId}`, {
+                method: "DELETE",
+            });
+
+            if (res.ok) {
+                // Remove from local state
+                setDateDetails((prev) =>
+                    prev
+                        ? {
+                            ...prev,
+                            vehicles: prev.vehicles.filter((v) => v.id !== vehicleId),
+                        }
+                        : prev
+                );
+            }
+        } catch (error) {
+            console.error("Error deleting vehicle:", error);
+        }
+    };
+
     const formatDate = (dateStr: string) => {
         const date = new Date(dateStr);
         const today = new Date();
@@ -252,6 +274,7 @@ export default function DateDetailPage() {
                                 targetCount={vehicle.targetCount}
                                 packageCount={vehicle.packageCount}
                                 dateId={dateId}
+                                onDelete={handleDeleteVehicle}
                             />
                         ))
                     )}

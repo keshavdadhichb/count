@@ -131,6 +131,71 @@ export default function VehiclePage() {
         }
     };
 
+    const handleDeletePackage = async (id: string) => {
+        try {
+            const res = await fetch(`/api/packages/${id}`, {
+                method: "DELETE",
+            });
+
+            if (res.ok) {
+                // Remove from local state
+                setVehicle((prev) =>
+                    prev
+                        ? {
+                            ...prev,
+                            packages: prev.packages.filter((p) => p.id !== id),
+                        }
+                        : prev
+                );
+
+                // Update stats
+                setStats((prev) => ({
+                    vehicleCount: Math.max(0, prev.vehicleCount - 1),
+                    dateCount: Math.max(0, prev.dateCount - 1),
+                    grandTotal: Math.max(0, prev.grandTotal - 1),
+                }));
+            }
+        } catch (error) {
+            console.error("Error deleting package:", error);
+        }
+    };
+
+    const handleEditPackage = async (id: string, newPackageNo: string) => {
+        try {
+            const res = await fetch(`/api/packages/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ packageNo: newPackageNo }),
+            });
+
+            const data = await res.json();
+
+            if (data.success && data.package) {
+                // Update local state
+                setVehicle((prev) =>
+                    prev
+                        ? {
+                            ...prev,
+                            packages: prev.packages.map((p) =>
+                                p.id === id ? data.package : p
+                            ),
+                        }
+                        : prev
+                );
+
+                // Show duplicate warning if applicable
+                if (data.isDuplicate) {
+                    setDuplicateMessage(
+                        `⚠️ Duplicate: Package ${newPackageNo} already exists`
+                    );
+                    setShowDuplicateToast(true);
+                }
+            }
+        } catch (error) {
+            console.error("Error editing package:", error);
+        }
+    };
+
     if (isLoading || !vehicle) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -202,7 +267,11 @@ export default function VehiclePage() {
                     <h3 className="text-lg font-bold text-gray-700 mb-3">
                         Scanned Packages ({vehicle.packages.length})
                     </h3>
-                    <PackageList packages={vehicle.packages} />
+                    <PackageList
+                        packages={vehicle.packages}
+                        onDelete={handleDeletePackage}
+                        onEdit={handleEditPackage}
+                    />
                 </div>
             </div>
         </div>

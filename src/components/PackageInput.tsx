@@ -80,7 +80,15 @@ export default function PackageInput({ onSubmit, disabled }: PackageInputProps) 
             </div>
 
             <button
-                type="submit"
+                type="button"
+                onClick={(e) => {
+                    e.preventDefault();
+                    handleSubmit(handleFormSubmit)();
+                    // Keep focus on input to prevent keyboard from closing
+                    setTimeout(() => {
+                        inputRef.current?.focus();
+                    }, 10);
+                }}
                 disabled={disabled || isSubmitting}
                 className="btn btn-success w-full text-xl font-bold min-h-[64px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
