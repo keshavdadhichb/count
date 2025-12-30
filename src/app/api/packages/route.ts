@@ -2,10 +2,11 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 // POST /api/packages - Add package with duplicate check (all-time history)
+// ADAS and LOOSE packages are tracked separately and don't count as duplicates with regular packages
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { vehicleId, packageNo } = body;
+        const { vehicleId, packageNo, isADAS = false, isLoose = false } = body;
 
         if (!vehicleId || !packageNo) {
             return NextResponse.json(
@@ -28,9 +29,16 @@ export async function POST(request: Request) {
             );
         }
 
-        // Check for duplicates across ALL packages in the database (all-time history)
+        // Check for duplicates - only check within the SAME category
+        // Regular packages only check against other regular packages
+        // ADAS packages only check against other ADAS packages
+        // LOOSE packages only check against other LOOSE packages
         const existingPackage = await prisma.package.findFirst({
-            where: { packageNo: trimmedNo },
+            where: {
+                packageNo: trimmedNo,
+                isADAS: isADAS,
+                isLoose: isLoose,
+            },
         });
 
         const isDuplicate = !!existingPackage;
@@ -40,6 +48,8 @@ export async function POST(request: Request) {
             data: {
                 packageNo: trimmedNo,
                 isDuplicate,
+                isADAS,
+                isLoose,
                 vehicleId,
             },
         });
@@ -52,6 +62,8 @@ export async function POST(request: Request) {
                     id: newPackage.id,
                     packageNo: newPackage.packageNo,
                     isDuplicate: newPackage.isDuplicate,
+                    isADAS: newPackage.isADAS,
+                    isLoose: newPackage.isLoose,
                     createdAt: newPackage.createdAt.toISOString(),
                 },
             },

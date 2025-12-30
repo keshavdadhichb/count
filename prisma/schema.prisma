@@ -32,6 +32,8 @@ model Package {
   id           String   @id @default(cuid())
   packageNo    String
   isDuplicate  Boolean  @default(false)
+  isADAS       Boolean  @default(false)
+  isLoose      Boolean  @default(false)
   vehicle      Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   vehicleId    String
   createdAt    DateTime @default(now())

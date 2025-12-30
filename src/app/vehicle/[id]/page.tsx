@@ -13,6 +13,8 @@ interface Package {
     id: string;
     packageNo: string;
     isDuplicate: boolean;
+    isADAS: boolean;
+    isLoose: boolean;
     createdAt: string;
 }
 
@@ -46,6 +48,8 @@ export default function VehiclePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [duplicateMessage, setDuplicateMessage] = useState("");
     const [showDuplicateToast, setShowDuplicateToast] = useState(false);
+    const [isEditingVehicle, setIsEditingVehicle] = useState(false);
+    const [editVehicleNo, setEditVehicleNo] = useState("");
 
     const fetchVehicle = useCallback(async () => {
         try {
@@ -87,13 +91,15 @@ export default function VehiclePage() {
     }, [vehicle, fetchStats]);
 
     const handleSubmitPackage = async (
-        packageNo: string
+        packageNo: string,
+        isADAS: boolean = false,
+        isLoose: boolean = false
     ): Promise<{ success: boolean; isDuplicate: boolean }> => {
         try {
             const res = await fetch("/api/packages", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ vehicleId, packageNo }),
+                body: JSON.stringify({ vehicleId, packageNo, isADAS, isLoose }),
             });
 
             const data = await res.json();
@@ -197,6 +203,26 @@ export default function VehiclePage() {
         }
     };
 
+    const handleEditVehicle = async () => {
+        if (!editVehicleNo.trim()) return;
+
+        try {
+            const res = await fetch(`/api/vehicles/${vehicleId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ vehicleNo: editVehicleNo }),
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                setVehicle(prev => prev ? { ...prev, vehicleNo: data.vehicle.vehicleNo } : prev);
+                setIsEditingVehicle(false);
+            }
+        } catch (error) {
+            console.error("Error updating vehicle:", error);
+        }
+    };
+
     if (isLoading || !vehicle) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -222,6 +248,48 @@ export default function VehiclePage() {
                 subtitle={vehicle.tripNo ? `Trip ${vehicle.tripNo}` : undefined}
                 backHref={`/date/${vehicle.workDateId}`}
             />
+
+            {/* Vehicle Edit Section */}
+            <div className="container pt-4">
+                {isEditingVehicle ? (
+                    <div className="flex gap-2 items-center">
+                        <input
+                            type="text"
+                            value={editVehicleNo}
+                            onChange={(e) => setEditVehicleNo(e.target.value.toUpperCase())}
+                            placeholder="Vehicle Number"
+                            className="flex-1 px-4 py-2 border-2 border-blue-300 rounded-xl font-bold text-lg focus:outline-none focus:border-blue-500"
+                            autoFocus
+                        />
+                        <button
+                            onClick={handleEditVehicle}
+                            className="px-4 py-2 bg-green-500 text-white rounded-xl font-bold"
+                        >
+                            ✓
+                        </button>
+                        <button
+                            onClick={() => setIsEditingVehicle(false)}
+                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl font-bold"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                ) : (
+                    <button
+                        onClick={() => {
+                            setEditVehicleNo(vehicle.vehicleNo);
+                            setIsEditingVehicle(true);
+                        }}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        Edit Vehicle Number
+                    </button>
+                )}
+            </div>
 
             <div className="container py-6 space-y-6">
                 {/* Progress Bar (if target set) */}

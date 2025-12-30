@@ -6,6 +6,8 @@ interface Package {
     id: string;
     packageNo: string;
     isDuplicate: boolean;
+    isADAS?: boolean;
+    isLoose?: boolean;
     createdAt: string;
 }
 
@@ -77,8 +79,8 @@ export default function PackageList({ packages, onDelete, onEdit }: PackageListP
                 <div
                     key={pkg.id}
                     className={`package-item flex items-center justify-between p-4 rounded-xl border-2 ${pkg.isDuplicate
-                            ? "bg-yellow-50 border-yellow-300"
-                            : "bg-gray-50 border-gray-200"
+                        ? "bg-yellow-50 border-yellow-300"
+                        : "bg-gray-50 border-gray-200"
                         } ${deletingId === pkg.id ? "opacity-50" : ""}`}
                     style={{ animationDelay: `${index * 50}ms` }}
                 >
@@ -106,6 +108,18 @@ export default function PackageList({ packages, onDelete, onEdit }: PackageListP
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {pkg.isADAS && editingId !== pkg.id && (
+                            <span className="text-xs font-semibold text-orange-700 bg-orange-200 px-2 py-1 rounded-full">
+                                ADAS
+                            </span>
+                        )}
+
+                        {pkg.isLoose && editingId !== pkg.id && (
+                            <span className="text-xs font-semibold text-purple-700 bg-purple-200 px-2 py-1 rounded-full">
+                                LOOSE
+                            </span>
+                        )}
+
                         {pkg.isDuplicate && editingId !== pkg.id && (
                             <span className="text-xs font-semibold text-yellow-700 bg-yellow-200 px-2 py-1 rounded-full">
                                 DUPLICATE

@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 
 interface PackageInputProps {
-    onSubmit: (packageNo: string) => Promise<{ success: boolean; isDuplicate: boolean }>;
+    onSubmit: (packageNo: string, isADAS: boolean, isLoose: boolean) => Promise<{ success: boolean; isDuplicate: boolean }>;
     disabled?: boolean;
 }
 
@@ -15,8 +15,10 @@ interface FormData {
 export default function PackageInput({ onSubmit, disabled }: PackageInputProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isADAS, setIsADAS] = useState(false);
+    const [isLoose, setIsLoose] = useState(false);
 
-    const { register, handleSubmit, reset, setFocus } = useForm<FormData>({
+    const { register, handleSubmit, reset } = useForm<FormData>({
         defaultValues: {
             packageNo: "",
         },
@@ -35,7 +37,7 @@ export default function PackageInput({ onSubmit, disabled }: PackageInputProps) 
 
         setIsSubmitting(true);
         try {
-            await onSubmit(trimmed);
+            await onSubmit(trimmed, isADAS, isLoose);
             reset();
             // Re-focus after submission
             setTimeout(() => {
@@ -44,7 +46,7 @@ export default function PackageInput({ onSubmit, disabled }: PackageInputProps) 
         } finally {
             setIsSubmitting(false);
         }
-    }, [onSubmit, reset, isSubmitting]);
+    }, [onSubmit, reset, isSubmitting, isADAS, isLoose]);
 
     const { ref: formRef, ...rest } = register("packageNo", {
         required: true,
@@ -79,6 +81,61 @@ export default function PackageInput({ onSubmit, disabled }: PackageInputProps) 
                 )}
             </div>
 
+            {/* ADAS and LOOSE Checkboxes */}
+            <div className="flex gap-4">
+                <label
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-base cursor-pointer transition-all border-2 ${isADAS
+                            ? "bg-orange-500 text-white border-orange-500"
+                            : "bg-white text-gray-700 border-gray-300 hover:border-orange-400"
+                        }`}
+                >
+                    <input
+                        type="checkbox"
+                        checked={isADAS}
+                        onChange={(e) => {
+                            setIsADAS(e.target.checked);
+                            if (e.target.checked) setIsLoose(false); // Mutually exclusive
+                        }}
+                        className="sr-only"
+                    />
+                    <span className={`w-5 h-5 rounded border-2 flex items-center justify-center ${isADAS ? "bg-white border-white" : "border-gray-400"
+                        }`}>
+                        {isADAS && (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-orange-500">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        )}
+                    </span>
+                    ADAS
+                </label>
+
+                <label
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-base cursor-pointer transition-all border-2 ${isLoose
+                            ? "bg-purple-500 text-white border-purple-500"
+                            : "bg-white text-gray-700 border-gray-300 hover:border-purple-400"
+                        }`}
+                >
+                    <input
+                        type="checkbox"
+                        checked={isLoose}
+                        onChange={(e) => {
+                            setIsLoose(e.target.checked);
+                            if (e.target.checked) setIsADAS(false); // Mutually exclusive
+                        }}
+                        className="sr-only"
+                    />
+                    <span className={`w-5 h-5 rounded border-2 flex items-center justify-center ${isLoose ? "bg-white border-white" : "border-gray-400"
+                        }`}>
+                        {isLoose && (
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-purple-500">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                        )}
+                    </span>
+                    LOOSE
+                </label>
+            </div>
+
             <button
                 type="button"
                 onClick={(e) => {
@@ -110,7 +167,7 @@ export default function PackageInput({ onSubmit, disabled }: PackageInputProps) 
                             <line x1="12" y1="5" x2="12" y2="19" />
                             <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
-                        ADD
+                        ADD {isADAS && "(ADAS)"} {isLoose && "(LOOSE)"}
                     </>
                 )}
             </button>
